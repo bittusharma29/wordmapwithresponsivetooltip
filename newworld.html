@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive World Map</title>
+    <script src="https://cdn.amcharts.com/lib/4/core.js"></script>
+    <script src="https://cdn.amcharts.com/lib/4/maps.js"></script>
+    <script src="https://cdn.amcharts.com/lib/4/geodata/worldLow.js"></script>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+        }
+        .container {
+            display: flex;
+            height: 100%;
+        }
+        #chartdiv {
+            width: 70%;
+            height: 100%;
+            max-height: fit-content;
+            
+        }
+        #tooltip {
+            width: 20%;
+            padding: 15px;
+            box-sizing: border-box;
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 10px solid #774747;
+            border-radius: 8px;
+            display: none;
+            overflow: hidden;
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(150%, 30%);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            max-width: 300px;
+            max-height: fit-content;
+            position: center;
+            z-index: 1000;
+        
+
+        }
+        #tooltip img {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        #tooltip h2 {
+            margin: 0 0 10px;
+            font-size: 24px;
+            color: #333;
+        }
+        #tooltip p {
+            margin: 0;
+            color: #555;
+        }
+        @media (max-width: 768px) {
+        .container {
+            flex-direction: column; /* Stack elements vertically */
+        }
+        #chartdiv {
+            height: 50vh; /* Adjust height for mobile */
+        }
+        #tooltip {
+            max-width: 90%; /* Tooltip width on mobile */
+        }
+    }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="chartdiv"></div>
+        <div id="tooltip"></div>
+    </div>
+
+    <script>
+       var clickableCountries = [
+        {
+            "id": "US",
+            "name": "United States",
+            "description": "The world's largest economy and a global superpower.",
+            "imageUrls": [
+            "Apple.png",
+                "Avacado.png",
+                "Grapes.png"
+            ]
+        },
+        {
+            "id": "CN",
+            "name": "China",
+            "description": "The world's most populous country and a rising economic powerhouse.",
+            "imageUrls": [
+                "Figs.png",
+                "Ginger.png"
+            ]
+        },
+        {
+            "id": "JP",
+            "name": "Japan",
+            "description": "The world's most populous country and a rising economic powerhouse.",
+            "imageUrls": [
+                "Limes.png",
+                "Oranges.png"
+            ]
+        },
+        {
+            "id": "DE",
+            "name": "Germany",
+            "description": "The world's most populous country and a rising economic powerhouse.",
+            "imageUrls": [
+                "Pears.png",
+                "Pomelo.png"
+            ]
+        },
+        {
+            "id": "GB",
+            "name": "United Kingdom",
+            "description": "The world's most populous country and a rising economic powerhouse.",
+            "imageUrls": [
+                "Avacado.png",
+                "Apple.png"
+            ]
+        },
+        {
+            "id": "IN",
+            "name": "India",
+            "description": "The world's most populous country and a rising economic powerhouse.",
+            "imageUrls": [
+                "Pomelo.png",
+                "Apple.png"
+            ]
+        },
+        {
+            "id": "RU",
+            "name": "Russia",
+            "description": "The world's most populous country and a rising economic powerhouse.",
+            "imageUrls": [
+                "Pomelo.png",
+                "Avacado.png"
+            ]
+        },
+        {
+            "id": "FR",
+            "name": "France",
+            "description": "The world's most populous country and a rising economic powerhouse.",
+            "imageUrls": [
+                "Avacado.png",
+                "Pomelo.png",
+                "Grapes.png",
+                "Oranges.png"
+            ]
+        },
+        {
+            "id": "AU",
+            "name": "Australia",
+            "description": "The world's most populous country and a rising economic powerhouse.",
+            "imageUrls": [
+                "Avacado.png",
+                "Pomelo.png",
+                "Apple.png",
+                "Grapes.png"
+            ]
+        },
+        {
+            "id": "CA",
+            "name": "Canada",
+            "description": "The world's most populous country and a rising economic powerhouse.",
+            "imageUrls": [
+                "Avacado.png",
+                "Pomelo.png",
+                "Grapes.png"
+            ]
+        },
+        {
+            "id": "ZA",
+            "name": "South Africa",
+            "description": "The world's most populous country and a rising economic powerhouse.",
+            "imageUrls": [
+                "Avacado.png",
+                "Pomelo.png",
+                "Apple.png"
+            ]
+        },
+        {
+            "id": "MX",
+            "name": "Mexico",
+            "description": "The world's most populous country and a rising economic powerhouse.",
+            "imageUrls": [
+                "Avacado.png",
+                "Pomelo.png",
+                "Grapes.png"
+            ]
+        },
+        
+    ];
+
+    am4core.ready(function() {
+        var chart = am4core.create("chartdiv", am4maps.MapChart);
+        configureMapChart(chart);
+    });
+
+    function configureMapChart(chart) {
+        chart.geodata = am4geodata_worldLow;
+        chart.projection = new am4maps.projections.Miller();
+
+        
+        chart.seriesContainer.draggable = false;
+        chart.seriesContainer.resizable = false;
+
+        
+        chart.maxZoomLevel = 1;
+        chart.minZoomLevel = 1;
+
+        var polygonSeries = chart.series.push(new am4maps.MapPolygonSeries());
+        polygonSeries.useGeodata = true;
+        polygonSeries.exclude = ["AQ"];
+
+        var polygonTemplate = polygonSeries.mapPolygons.template;
+        polygonTemplate.fill = am4core.color("#CCCCCC");
+
+        var hs = polygonTemplate.states.create("hover");
+        hs.properties.fill = am4core.color("#AAAAAA");
+
+        clickableCountries.forEach(function(country) {
+            polygonSeries.data.push({
+                ...country,
+                fill: am4core.color("#74B266")
+            });
+        });
+
+        polygonTemplate.propertyFields.fill = "fill";
+
+        polygonTemplate.events.on("hit", function(ev) {
+            var data = ev.target.dataItem.dataContext;
+            if (data.id) {
+                showTooltip(data);
+            }
+        });
+
+        chart.zoomControl = new am4maps.ZoomControl();
+        chart.zoomControl.disabled = true;
+        chart.panBehavior = "none";
+    }
+
+    function showTooltip(country) {
+        var tooltip = document.getElementById('tooltip');
+        var imagesHTML = country.imageUrls.map(url => 
+            `<img src="${url}" alt="${country.name}">`
+        ).join('');
+
+        tooltip.innerHTML = `
+            <h2>${country.name}</h2>
+            <div class="tooltip-content">
+                <div class="tooltip-images">
+                    ${imagesHTML}
+                </div>
+                <p>${country.description}</p>
+            </div>
+        `;
+        tooltip.style.display = 'block';
+    }
+    </script>
+</body>
+</html>
